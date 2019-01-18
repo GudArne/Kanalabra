@@ -1,22 +1,11 @@
 const Koa = require('koa');
 const bcrypt = require('bcryptjs');
 const bodyParser = require('koa-bodyparser');
-const sql = require("sqlite3").verbose();
-
-let db = new sql.Database('./db/Fyllespelet.db', function(err){
-    if(err)
-    {
-        console.log(err.message);
-    }
-    else
-    {
-        console.log("connected");
-    }
-
-});
 
 const app = new Koa();
 app.use(bodyParser());
+
+require("../connect")(app);
 
 module.exports = async function(name, email, password)
 {
@@ -33,14 +22,13 @@ module.exports = async function(name, email, password)
     console.log("pwHash: ", user.password);
 
     const result = await ins("INSERT INTO users (user_name, user_email, user_password) VALUES(?,?,?)",[user.name, user.email, user.password]);
-    return result;
-    
+    return result; 
 }
 
 function ins(query, params){
 
     return new Promise(function(resolve, reject){
-        db.run(query, params, function(err){
+        app.db.run(query, params, function(err){
             if(err) reject(" error: " + err.message)
             else {
                 resolve(true);
@@ -48,6 +36,15 @@ function ins(query, params){
         });
     });
 }
+
+
+
+
+
+
+
+
+
 
 
 // GAMMAL FUNCTION, ANVÄNDS INTE
@@ -63,8 +60,7 @@ function saveUser(userObj)
             console.log(err + " Din email används nog redan");}
         else
         {
-
-            
+  
         }
     });
     db.all("SELECT * FROM users",[],(err,result)=>{
